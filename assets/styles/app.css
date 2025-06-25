@@ -1,3 +1,162 @@
-body {
-    background-color: skyblue;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+        /** buttons classes **/
+        .btn-validation {
+          @apply w-full py-3 px-4  shadow-sm shadow-gray-400 bg-neutral-100 hover:bg-neutral-200 focus:outline-none tracking-wider text-sm text-cyan-600 rounded-md;
+        }
+        .btn-confirmation {
+          @apply w-full py-3 px-4  shadow-sm shadow-cyan-900 bg-cyan-600 hover:bg-cyan-700 focus:outline-none tracking-wider text-sm text-white rounded-md;
+        }
+        .btn-retour {
+          @apply w-full py-3 px-4  shadow-sm shadow-gray-400 bg-amber-400 hover:bg-amber-500 focus:outline-none tracking-wider text-sm text-black rounded-md;
+        }
+        .btn-amber {
+          @apply ml-4 px-4 py-2 rounded-md text-sm font-medium min-w-max overflow-hidden shadow-sm shadow-gray-400 relative bg-amber-400 text-stone-950 hover:bg-opacity-90;
+        }
+        .btn-connection {
+          @apply ml-4 px-4 py-2 rounded-md text-sm font-medium min-w-max overflow-hidden shadow-sm shadow-gray-400 relative bg-stone-900 text-white hover:bg-opacity-90;
+        }
+        .btn-azur {
+          @apply ml-4 px-4 py-2 rounded-md text-sm font-medium min-w-max overflow-hidden shadow-sm shadow-gray-400 relative text-white bg-cyan-600 hover:bg-cyan-800 hover:bg-opacity-90;
+        }
+        .btn-marine {
+          @apply ml-4 px-4 py-2 rounded-md text-sm font-medium min-w-max overflow-hidden shadow-sm shadow-gray-400 relative bg-blue-500 text-white hover:bg-opacity-90;
+        }
+        .btn-rouge {
+          @apply ml-4 px-4 py-2 rounded-md text-sm font-medium min-w-max overflow-hidden shadow-sm shadow-gray-400 relative bg-red-500 text-white hover:bg-opacity-90;
+        }
+        .btn-vert {
+          @apply ml-4 px-4 py-2 rounded-md text-sm font-medium min-w-max overflow-hidden shadow-sm shadow-gray-400 relative bg-green-500 text-white hover:bg-opacity-90;
+        }
+        .btn-violet {
+          @apply ml-4 px-4 py-2 rounded-md text-sm font-medium min-w-max overflow-hidden shadow-sm shadow-gray-400 relative bg-purple-500 text-white hover:bg-opacity-90;
+        }
+        .btn-blanc {
+          @apply ml-4 px-4 py-2 rounded-md text-sm font-medium min-w-max overflow-hidden shadow-sm shadow-gray-400 relative bg-neutral-100 text-neutral-950 hover:bg-opacity-90;
+        }
+        .btn-noir {
+          @apply ml-4 px-4 py-2 rounded-md text-sm font-medium min-w-max overflow-hidden shadow-sm shadow-gray-400 relative bg-neutral-950 text-white hover:bg-opacity-90;
+        }
+
+        /** Alerts classes **/
+        .alert-bg-success {
+          @apply flex items-center p-4 mb-4 text-sm text-green-800 border border-green-300 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400 dark:border-green-800;
+        }
+        .alert-bg-danger {
+          @apply flex items-center p-4 mb-4 text-sm text-red-800 border border-red-300 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 dark:border-red-800;
+        }
+        .alert-bg-info {
+          @apply flex items-center p-4 mb-4 text-sm text-blue-800 border border-blue-300 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400 dark:border-blue-800;
+        }
+      
+        .alert-bg-warning {
+          @apply flex items-center p-4 mb-4 text-sm text-yellow-800 border border-yellow-300 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300 dark:border-yellow-800;
+        }
+        .alert-bg-dark {
+          @apply flex items-center p-4 text-sm text-gray-800 border border-gray-300 rounded-lg bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600;
+        }
+
+        /** Inputs class **/
+        .input-gray {
+          @apply my-5 shadow-inner bg-zinc-50 rounded-lg placeholder-gray-500 text-sm p-4 md:p-2 block mt-1 w-full;
+        }
+      
+  }
+
+  span.ripple {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    animation: ripple 600ms linear;
+    background-color: rgba(255, 255, 255, 0.7);
+  }
+  @keyframes ripple {
+    to {
+      transform: scale(4);
+      opacity: 0;
+    }
+  }
+
+
+#allowEmail{
+  display: none;
+}
+
+#allowPassword{
+  display: none;
+}
+
+#allowAgreeTerms{
+  display: none;
+}
+
+#password_criteria{
+  display: none;
+}
+#password_criteria li {
+  font-size: 10px;
+}
+
+#password_criteria li[class="password-criteria-true"]::before,
+#password_criteria li[class="password-criteria-false"]::before
+{
+  margin-right: 0.5rem;
+  color: transparent;
+}
+
+#password_criteria li[class="password-criteria-true"]::before
+{
+  text-shadow: 0 0 0 lightgreen;
+  content: '\02714';
+}
+
+#password_criteria li[class="password-criteria-false"]::before
+{
+  text-shadow: 0 0 0 red;
+  content: '\02716';
+}
+
+#loginEye {
+  cursor: pointer;
+}
+#registerEye{
+  cursor: pointer;
+}
+#resetEyeOne{
+  position:absolute;
+  cursor: pointer;
+  top: 44px;
+}
+
+#resetEyeTwo{
+  position:absolute;
+  cursor: pointer;
+  top: 129px;
+}
+.bouton-email{
+    display: inline-block;
+    outline: 0;
+    cursor: pointer;
+    padding: 5px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    vertical-align: middle;
+    border: 1px solid;
+    border-radius: 6px;
+    color: #ffffff;
+    background-color: #2ea44f;
+    border-color: #1b1f2326;
+    box-shadow: rgba(27, 31, 35, 0.04) 0px 1px 0px 0px, rgba(255, 255, 255, 0.25) 0px 1px 0px 0px inset;
+    transition: 0.2s cubic-bezier(0.3, 0, 0.5, 1);
+    transition-property: color, background-color, border-color;
+    :hover {
+        background-color: #2c974b;
+        border-color: #1b1f2326;
+        transition-duration: 0.1s;
+    }
+
 }

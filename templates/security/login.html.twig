@@ -1,0 +1,85 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connection
+{% endblock %}
+
+{% block importmap %}
+	{{ importmap(['login']) }}
+{% endblock %}
+{% block body %}
+
+	<div class="font-[sans-serif] max-w-3xl items-center mx-auto md:h-screen p-4">
+		<div class="grid md:grid-cols-3 items-center shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] rounded-xl overflow-hidden">
+			<div class="max-md:order-1 flex flex-col justify-center space-y-16 max-md:mt-16 min-h-full bg-gradient-to-r from-cyan-900 to-cyan-700 lg:px-8 px-4 py-4">
+				<div>
+					<h6 class="text-yellow-300 text-sm font-semibold">Connection à votre compte</h6>
+					<p class="text-[12px] italic text-gray-300 mt-2 leading-relaxed">Bienvenue ...</p>
+					<p class="text-[12px] italic text-gray-300 mt-2 leading-relaxed">Saisissez vos identifiants</p>
+					<p class="text-[12px] italic text-gray-300 mt-2 leading-relaxed">puis validez</p>
+					<ul id="allowState">
+						<li id="allowEmail" class="text-[12px] italic mt-4 ml-3 leading-relaxed"></li>
+						<li id="allowPassword" class="text-[12px] italic mt-1 ml-3 leading-relaxed"></li>
+						<li id="allowAgreeTerms" class="text-[12px] italic mt-1 ml-3 leading-relaxed"></li>
+					</ul>
+				</div>
+				<div>
+					<h6 class="text-white text-sm font-semibold">Formulaire sécurisé</h6>
+					<p id="message" class="text-[12px] italic text-yellow-200 mt-2 leading-relaxed"></p>
+					<div class="ml-4"></div>
+				</div>
+			</div>
+			<form class="bg-white md:col-span-2 w-full py-6 px-6 sm:px-16" id="form_login" method='post'>
+				<div class="mb-6">
+					<h3 class=" text-2xl font-light text-center text-cyan-600">Se connecter</h3>
+				</div>
+				{% if error %}
+					<div class="alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+				{% endif %}
+
+				{% if app.user %}
+					<div class="mb-3">
+						You are logged in as
+						{{ app.user.userIdentifier }},
+						<a href="{{ path('app_logout') }}">Logout</a>
+					</div>
+				{% endif %}
+				<div>
+					<p class="my-4 text-center text-xs" id="message_form_inscription"></p>
+				</div>
+				<div class="relative flex items-center">
+					<input type="email" value="{{ last_username }}" name="email" id="inputEmail" required class="input-gray" placeholder=""/>
+					<svg xmlns="http://www.w3.org/2000/svg" fill="#bbb" stroke="#bbb" class="w-4 h-4 absolute right-4" viewbox="0 0 24 24">
+						<circle cx="10" cy="7" r="6" data-original="#000000"></circle>
+						<path d="M14 15H6a5 5 0 0 0-5 5 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 5 5 0 0 0-5-5zm8-4h-2.59l.3-.29a1 1 0 0 0-1.42-1.42l-2 2a1 1 0 0 0 0 1.42l2 2a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.42l-.3-.29H22a1 1 0 0 0 0-2z" data-original="#000000"></path>
+					</svg>
+					<div class="text-sm text-red-700"></div>
+				</div>
+
+				<div>
+					<div class="relative flex items-center">
+						<input type="password" name="password" id="inputPassword" required class="input-gray"/>
+						<svg id="loginEye" xmlns="http://www.w3.org/2000/svg" fill="#bbb" stroke="#bbb" class="w-4 h-4 absolute right-4 cursor-pointer" viewbox="0 0 128 128">
+							<path d="M64 104C22.127 104 1.367 67.496.504 65.943a4 4 0 0 1 0-3.887C1.367 60.504 22.127 24 64 24s62.633 36.504 63.496 38.057a4 4 0 0 1 0 3.887C126.633 67.496 105.873 104 64 104zM8.707 63.994C13.465 71.205 32.146 96 64 96c31.955 0 50.553-24.775 55.293-31.994C114.535 56.795 95.854 32 64 32 32.045 32 13.447 56.775 8.707 63.994zM64 88c-13.234 0-24-10.766-24-24s10.766-24 24-24 24 10.766 24 24-10.766 24-24 24zm0-40c-8.822 0-16 7.178-16 16s7.178 16 16 16 16-7.178 16-16-7.178-16-16-16z" data-original="#000000"></path>
+						</svg>
+						<div class="text-sm text-red-700"></div>
+					</div>
+				</div>
+
+				<input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}"/>
+				<div class="flex items-center justify-between mb-5">
+					<div class="flex items-center">
+						<input type="checkbox" name="_remember_me" id="remember_me" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+						<label for="remember" class="ml-2 block text-xs text-gray-500">Se souvenir de moi</label>
+					</div>
+
+
+				</div>
+				<button type="submit" id="inputSubmit" class=" btn-confirmation">Connexion</button>
+					<p class="text-gray-800 text-xs font-light mt-6 text-center">
+				<a href="{# path('forgotten_password') #}" class="text-xs text-cyan-600 hover:text-cyan-700">mot de passe oublié ?</a></p>
+			</form>
+			
+		</div>
+	</div>
+
+{% endblock %}

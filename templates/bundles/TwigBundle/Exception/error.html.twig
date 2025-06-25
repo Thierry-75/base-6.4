@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Oops !
+{% endblock %}
+
+{% block body %}
+	<div class="max-w-screen-xl mx-auto p-5 sm:p-8 md:p-12">
+
+		<div class="max-w-md mx-auto text-center bg-white bg-opacity-90 p-8 rounded-md shadow-md">
+			<div class="text-3xl font-bold text-cyan-600 mb-4">{{  status_code }}</div>
+			<h1 class="text-2xl font-bold text-orange-900 mb-6">Oops!</h1>
+			<p class="text-md text-cyan-800 mb-2">Y a un truc qu'il a pas aimé...</p>
+			<p class="text-md text-orange-900 mb-2">Désolé peut être un peu plus tard ...</p>
+			<p class="text-md text-cyan-800 mb-2">Message:
+				{{ status_text }}</p>
+
+			<a href="{{ path('app_main')}}" class="btn-retour">
+				Retour à l'accueil
+			</a>
+		</div>
+	</div>
+
+{% endblock %}

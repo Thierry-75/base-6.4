@@ -1,20 +1,72 @@
-
 services:
-###> doctrine/doctrine-bundle ###
-  database:
-    image: postgres:${POSTGRES_VERSION:-16}-alpine
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-app}
-      # You should definitely change the password in production
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
-      POSTGRES_USER: ${POSTGRES_USER:-app}
+  
+  db:
+    image: mariadb:latest
+    container_name: mariadb-base
+    ports:
+      - "3306:3306"
     volumes:
-      - database_data:/var/lib/postgresql/data:rw
-      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-      # - ./docker/db/data:/var/lib/postgresql/data:rw
-###< doctrine/doctrine-bundle ###
+      - db-data:/var/lib/mysql/data:rw
+    environment:
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'yes'
+      MARIADB_DATABASE: 'blog_db'
+
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin-base
+    depends_on:
+      - db
+    ports:
+      - "8085:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: 'root'
+  
+
+  
+  rabbitmq:
+    image: rabbitmq:3.7-management
+    container_name: rabbitmq-base
+    ports: [5672, 15672]
+    restart: always
+    networks:
+      - webdev
+
+  portainer-ce:
+    image: portainer/portainer-ce
+    container_name: portainer-base
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - webdev
+
+  mailer:
+    image: axllent/mailpit
+    container_name: mailpit-base
+    ports:
+      - "1025"
+      - "8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    networks:
+      - webdev
+
+  redis:
+    image: redis:5-alpine
+    container_name: redis-base
+    ports: [ "6379" ]
+    networks:
+      - webdev
+
+
 
 volumes:
-###> doctrine/doctrine-bundle ###
-  database_data:
+  ###> doctrine/doctrine-bundle ###
+  db-data:
 ###< doctrine/doctrine-bundle ###
+networks:
+  webdev:
