@@ -2,9 +2,17 @@
 
 namespace App\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use App\Service\JwtService;
+use App\Service\IntraController;
+use App\Repository\UserRepository;
+use App\Form\ResetPasswordRequestForm;
+use Doctrine\ORM\EntityNotFoundException;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 class SecurityController extends AbstractController
@@ -12,16 +20,16 @@ class SecurityController extends AbstractController
     #[Route(path: '/login', name: 'app_login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
-       
-         if ($this->getUser()) {
-             return $this->redirectToRoute('app_main');
-         }
-         
+
+        if ($this->getUser()) {
+            return $this->redirectToRoute('app_main');
+        }
+
         // get the login error if there is one
         $error = $authenticationUtils->getLastAuthenticationError();
         // last username entered by the user
         $lastUsername = $authenticationUtils->getLastUsername();
-        
+
         return $this->render('security/login.html.twig', ['last_username' => $lastUsername, 'error' => $error]);
     }
 
@@ -29,5 +37,33 @@ class SecurityController extends AbstractController
     public function logout(): void
     {
         throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
+    }
+
+    #[Route(path:'/forgotten-password', name:'forgotten_password',methods:['GET','POST'])]
+    public function forgottenPassword(Request $request, ValidatorInterface $validator, UserRepository $user_repository,
+    IntraController $intraController, JwtService $jwtService, MessageBusInterface $messageBus
+    ): Response
+    {
+        $form = $this->createForm(ResetPasswordRequestForm::class);
+        $form->handleRequest($request);
+        if($request->isMethod('POST')){
+            $errors = $validator->validate($request);
+            if(count($errors)>0){
+                return $this->render('security/reset_password_request.html.twig',['requestForm'=>$form->createView(),'errors'=>$errors]);
+            }
+            if($form->isSubmitted() && $form->isValid()){
+                try{
+                    $user = $user_repository->findByEmail($form->get('email')->getData());
+                    $subject = 'Demande de nouveau mot de passe';
+                    $destination = $intraController->setDestination('reset_pass');
+                    $nomTemplate = $intraController->setNomTemplate('password_reset');
+                    $intraController->emailValidate($user, $jwtService, $messageBus,$destination,$subject,$nomTemplate);
+                    $this->addFlash('alert-success','Lien email nouveau mot de passe envoyé !');
+                }catch(EntityNotFoundException $e){
+                    return $this->redirectToRoute('app_error',['exception'=>$e]);
+                }
+            }
+        }
+        return $this->render('security/reset_password_request.html.twig',['requestForm'=>$form->createView()]);
     }
 }

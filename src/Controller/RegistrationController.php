@@ -55,7 +55,9 @@ class RegistrationController extends AbstractController
                 $entityManager->persist($user);
                 $entityManager->flush();
                 $subject = 'Activation de votre compte';
-                $intraController->emailValidate($user, $jwtService, $messageBus,$subject);
+                $destination = $intraController->setDestination('check_user');
+                $nomTemplate = $intraController->setNomTemplate('register');
+                $intraController->emailValidate($user, $jwtService, $messageBus,$destination,$subject,$nomTemplate);
                 $this->addFlash('alert-danger', 'Vous devez confirmer votre adresse email');
                 return $this->redirectToRoute('app_main');
             } catch (EntityNotFoundException $e) {

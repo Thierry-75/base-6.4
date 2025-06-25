@@ -44,6 +44,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?bool $isNewsLetter = false;
 
+    #[ORM\Column(length: 255, nullable:true)]
+    private ?string $resetToken = null;
+
 
     public function getId(): ?int
     {
@@ -138,6 +141,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setIsNewsLetter(bool $isNewsLetter): static
     {
         $this->isNewsLetter = $isNewsLetter;
+
+        return $this;
+    }
+
+    public function getResetToken(): ?string
+    {
+        return $this->resetToken;
+    }
+
+    public function setResetToken(string $resetToken): static
+    {
+        $this->resetToken = $resetToken;
 
         return $this;
     }

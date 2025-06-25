@@ -17,21 +17,21 @@ final class MainController extends AbstractController
 
 
     #[Route('/', name: 'app_main')]
-    public function index(IntraController $intraController, JwtService $jwt, MessageBusInterface $messageBus): Response
+    public function index(IntraController $intraController, JwtService $jwtService, MessageBusInterface $messageBus): Response
     {
         if ($this->getUser()) {
             //force to validate email
             if ($intraController->confirmEmail($this->getUser())) {
                 if (isObject($this->getUser())) {
-                    $subject = 'Activation de votre compte';
-                    $intraController->emailValidate($this->getUser(), $jwt, $messageBus,$subject);
-                    $this->addFlash('alert-warning','Vous devez activer votre adresse email ');
+                $subject = 'Activation de votre compte';
+                $destination = $intraController->setDestination('check_user');
+                $nomTemplate = $intraController->setNomTemplate('register');
+                $intraController->emailValidate($this->getUser(), $jwtService, $messageBus,$destination,$subject,$nomTemplate);
+                    $this->addFlash('alert-warning', 'Vous devez activer votre adresse email ');
                     $this->redirectToRoute('app_logout');
                 }
             }
         }
-
-
         return $this->render('main/index.html.twig', [
             'controller_name' => 'MainController',
         ]);
