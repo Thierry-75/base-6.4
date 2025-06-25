@@ -41,6 +41,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?bool $isVerified = false;
 
+    #[ORM\Column]
+    private ?bool $isNewsLetter = false;
+
 
     public function getId(): ?int
     {
@@ -123,6 +126,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setIsVerified(bool $isVerified): static
     {
         $this->isVerified = $isVerified;
+
+        return $this;
+    }
+
+    public function isNewsLetter(): ?bool
+    {
+        return $this->isNewsLetter;
+    }
+
+    public function setIsNewsLetter(bool $isNewsLetter): static
+    {
+        $this->isNewsLetter = $isNewsLetter;
 
         return $this;
     }

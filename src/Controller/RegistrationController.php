@@ -3,22 +3,19 @@
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Service\IntraController;
 use App\Service\JwtService;
-use App\Service\MailService;
 use App\Form\RegistrationForm;
-use App\Message\SendActivationMessage;
+use App\Service\IntraController;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityNotFoundException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class RegistrationController extends AbstractController
 {
@@ -59,19 +56,18 @@ class RegistrationController extends AbstractController
                 $entityManager->flush();
                 $subject = 'Activation de votre compte';
                 $intraController->emailValidate($user, $jwtService, $messageBus,$subject);
-                   $this->addFlash('alert-warning', 'Vous devez confirmer votre adresse email');
+                $this->addFlash('alert-danger', 'Vous devez confirmer votre adresse email');
                 return $this->redirectToRoute('app_main');
             } catch (EntityNotFoundException $e) {
                 return $this->redirectToRoute('app_error', ['exception' => $e]);
             }
         }
-
         return $this->render('registration/register.html.twig', [
             'registrationForm' => $form->createView()
         ]);
     }
 
-    #[Route('/check/{token}', name: 'check_user')]
+        #[Route('/check/{token}', name: 'check_user')]
     public function verifyUser($token, JWTService $jwt, UserRepository $userRepository, EntityManagerInterface $em): Response
     {
         //if token valid, expired & !modified
@@ -83,50 +79,16 @@ class RegistrationController extends AbstractController
             $user = $userRepository->find($payload['user_id']);
 
             if ($user && !$user->IsVerified()) {
-                $user->setIsVerified(true);
+                $user->setIsVerified(true)
+                    ->setIsNewsLetter(true);
                 $em->persist($user);
                 $em->flush();
 
                 $this->addFlash('alert-success', 'Utilisateur activé');
-                return $this->redirectToRoute('app_main');
+                return $this->redirectToRoute('app_login');
             }
         }
-
         $this->addFlash('alert-danger', 'Le token est invalide ou a expiré');
         return $this->redirectToRoute('app_login');
-    }
-
-
-
-    #[Route('/emailvalidate', name: 'email_validate')]
-    public function validateEmail(JWTService $jwt, MailService $mail, IntraController $intraController,MessageBusInterface $messageBus): Response
-    {
-        $user = $this->getUser();
-
-        if (!$user) {
-            $this->addFlash('alert-danger', 'Vous devez être connecté pour accéder à cette page');
-            return $this->redirectToRoute('app_login');
-        }
-
-        if ($user->IsVerified() === true) {
-            $this->addFlash('alert-warning', 'Cet utilisateur est déjà activé');
-            return $this->redirectToRoute('profile_index');
-        }
-        $header = ['typ' => 'JWT', 'alg' => 'HS256'];
-        $payload = ['user_id' => $user->getId()];
-
-        $token = $jwt->generate($header, $payload, $this->getParameter('app.jwtsecret'));
-        $url = $this->generateUrl('check_user', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
-        $messageBus->dispatch(new SendActivationMessage($intraController->getWebmaster(), $user->getEmail(), 'Activation de votre compte', 'register', ['user' => $user, 'url' => $url]));
-        // On envoie un mail
-        $mail->sendMail(
-            $intraController->getWebmaster(),
-            $user->getEmail(),
-            'Activation de votre compte sur le site',
-            'register',
-            ['user' => $user, 'token' => $token]
-        );
-        $this->addFlash('alert-success', 'Email de vérification envoyé');
-        return $this->redirectToRoute('app_main');
     }
 }

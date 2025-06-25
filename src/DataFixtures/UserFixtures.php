@@ -21,7 +21,7 @@ class UserFixtures extends Fixture
     {
         $faker = Factory::create('fr_FR');
 
-        for($i =0; $i < 5; $i++)
+        for($i =0; $i < 10; $i++)
         {
             $user = new User();
             $user->setEmail($faker->email())
@@ -29,6 +29,9 @@ class UserFixtures extends Fixture
             ->setCreatedAt(new \DateTimeImmutable())
             ->setPassword($this->userPasswordHasher->hashPassword($user,'ArethiA75!'))
             ->setIsVerified(mt_rand(0,1===1 ? true : false));
+            if($user->IsVerified(true)){
+                $user->setIsNewsLetter(true);
+            }
 
             $manager->persist($user);
             
