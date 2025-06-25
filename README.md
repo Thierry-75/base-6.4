@@ -1,5 +1,6 @@
 # Base Symfony 6.4
-    -le process User est implémenté avec Redis et RabbitMQ via containers docker Session et messenger async avec JWT TOKEN.
+    -le process User est implémenté avec Redis et RabbitMQ
+    - containers docker pour session et messenger async avec JWT TOKEN.
     -login register forget-password activation ...
 
 ## Base de données
