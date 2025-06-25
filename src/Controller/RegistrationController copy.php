@@ -22,13 +22,14 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class RegistrationController extends AbstractController
 {
-
+    
     #[Route('/register', name: 'app_register', methods: ['GET', 'POST'])]
     public function register(
         Request $request,
         UserPasswordHasherInterface $userPasswordHasher,
         ValidatorInterface $validator,
         JwtService $jwtService,
+        MailService $mailService,
         IntraController $intraController,
         MessageBusInterface $messageBus,
         EntityManagerInterface $entityManager
@@ -57,9 +58,11 @@ class RegistrationController extends AbstractController
             try {
                 $entityManager->persist($user);
                 $entityManager->flush();
-                $subject = 'Activation de votre compte';
-                $intraController->emailValidate($user, $jwtService, $messageBus,$subject);
-                   $this->addFlash('alert-warning', 'Vous devez confirmer votre adresse email');
+                $header = ['typ' => 'JWT', 'alg' => 'HS256'];
+                $payload = ['user_id' => $user->getId()];
+                $token = $jwtService->generate($header, $payload, $this->getParameter('app.jwtsecret'));
+                $url = $this->generateUrl('check_user',['token'=>$token],UrlGeneratorInterface::ABSOLUTE_URL);
+                $messageBus->dispatch(new SendActivationMessage($intraController->getWebmaster(), $user->getEmail(), 'Activation de votre compte', 'register', ['user' => $user, 'url' => $url]));
                 return $this->redirectToRoute('app_main');
             } catch (EntityNotFoundException $e) {
                 return $this->redirectToRoute('app_error', ['exception' => $e]);
@@ -88,7 +91,7 @@ class RegistrationController extends AbstractController
                 $em->flush();
 
                 $this->addFlash('alert-success', 'Utilisateur activé');
-                return $this->redirectToRoute('app_main');
+                return $this->redirectToRoute('app_login');
             }
         }
 
@@ -98,8 +101,8 @@ class RegistrationController extends AbstractController
 
 
 
-    #[Route('/emailvalidate', name: 'email_validate')]
-    public function validateEmail(JWTService $jwt, MailService $mail, IntraController $intraController,MessageBusInterface $messageBus): Response
+    #[Route('/renvoiverif', name: 'resend_verif')]
+    public function resendVerif(JWTService $jwt, MailService $mail, IntraController $intraController): Response
     {
         $user = $this->getUser();
 
@@ -112,12 +115,22 @@ class RegistrationController extends AbstractController
             $this->addFlash('alert-warning', 'Cet utilisateur est déjà activé');
             return $this->redirectToRoute('profile_index');
         }
-        $header = ['typ' => 'JWT', 'alg' => 'HS256'];
-        $payload = ['user_id' => $user->getId()];
 
+        // On génère le JWT de l'utilisateur
+        // On crée le Header
+        $header = [
+            'typ' => 'JWT',
+            'alg' => 'HS256'
+        ];
+
+        // On crée le Payload
+        $payload = [
+            'user_id' => $user->getId()
+        ];
+
+        // On génère le token
         $token = $jwt->generate($header, $payload, $this->getParameter('app.jwtsecret'));
-        $url = $this->generateUrl('check_user', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
-        $messageBus->dispatch(new SendActivationMessage($intraController->getWebmaster(), $user->getEmail(), 'Activation de votre compte', 'register', ['user' => $user, 'url' => $url]));
+
         // On envoie un mail
         $mail->sendMail(
             $intraController->getWebmaster(),
