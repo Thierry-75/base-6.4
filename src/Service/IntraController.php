@@ -93,4 +93,6 @@ class IntraController extends AbstractController
         $messageBus->dispatch(new SendActivationMessage($this->getWebmaster(), $user->getEmail(), $subject, $nomTemplate, ['user' => $user, 'url' => $url]));
     }
 
+    
+
 }

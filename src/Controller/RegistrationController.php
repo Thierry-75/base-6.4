@@ -43,22 +43,18 @@ class RegistrationController extends AbstractController
                 ]);
             }
         }
-
         if ($form->isSubmitted() && $form->isValid()) {
-            /** @var string $plainPassword */
-            $plainPassword = $form->get('plainPassword')->getData();
-
-            // encode the plain password
-            $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword))
+            // encode password
+            $user->setPassword($userPasswordHasher->hashPassword($user, $form->get('plainPassword')->getData()))
                 ->setRoles(['ROLE_USER']);
             try {
                 $entityManager->persist($user);
                 $entityManager->flush();
                 $subject = 'Activation de votre compte';
-                $destination = $intraController->setDestination('check_user');
-                $nomTemplate = $intraController->setNomTemplate('register');
+                $destination = 'check_user';
+                $nomTemplate = 'register';
                 $intraController->emailValidate($user, $jwtService, $messageBus,$destination,$subject,$nomTemplate);
-                $this->addFlash('alert-danger', 'Vous devez confirmer votre adresse email');
+                $this->addFlash('alert-warning', 'Vous devez confirmer votre adresse email');
                 return $this->redirectToRoute('app_main');
             } catch (EntityNotFoundException $e) {
                 return $this->redirectToRoute('app_error', ['exception' => $e]);

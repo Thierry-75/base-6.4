@@ -24,10 +24,10 @@ final class MainController extends AbstractController
             if ($intraController->confirmEmail($this->getUser())) {
                 if (isObject($this->getUser())) {
                 $subject = 'Activation de votre compte';
-                $destination = $intraController->setDestination('check_user');
-                $nomTemplate = $intraController->setNomTemplate('register');
+                $destination = 'check_user';
+                $nomTemplate ='register';
                 $intraController->emailValidate($this->getUser(), $jwtService, $messageBus,$destination,$subject,$nomTemplate);
-                    $this->addFlash('alert-warning', 'Vous devez activer votre adresse email ');
+                    $this->addFlash('alert-danger', 'Vous devez activer votre adresse email ');
                     $this->redirectToRoute('app_logout');
                 }
             }
