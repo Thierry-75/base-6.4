@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Form\ChangePasswordForm;
 use App\Service\JwtService;
 use App\Service\MailService;
 use App\Service\IntraController;
@@ -10,6 +11,7 @@ use App\Repository\UserRepository;
 use App\Form\ResetPasswordRequestForm;
 use App\Message\ForgetPasswordMessage;
 use App\Message\SendActivationMessage;
+use App\Message\SendPasswordConfirm;
 use App\Message\SendPasswordRequest;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityNotFoundException;
@@ -22,6 +24,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Routing\Generator\UrlGenerator;
 use Symfony\Component\Security\Csrf\TokenGenerator\TokenGeneratorInterface;
 
 class SecurityController extends AbstractController
@@ -69,12 +72,13 @@ class SecurityController extends AbstractController
                 try {
                     $user = $user_repository->findByEmail($form->get('email')->getData());
                     $usr = (object) $user[0];
-                    $token= $tokenGenerator->generateToken();
+                    $token = $tokenGenerator->generateToken();
                     $usr->setResetToken($token);
                     $em->flush();
                     $url = $this->generateUrl('reset_password', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
-                    $messageBus->dispatch(new SendPasswordRequest($intraController->getWebmaster(),$usr->getEmail(),'Demande mot de passe','password_reset',['url'=>$url,'user'=>$usr]));
+                    $messageBus->dispatch(new SendPasswordRequest($intraController->getWebmaster(), $usr->getEmail(), 'Demande mot de passe', 'password_reset', ['url' => $url, 'user' => $usr]));
                     $this->addFlash('alert-success', 'Lien email nouveau mot de passe envoyé !');
+                    return $this->redirectToRoute('app_main');
                 } catch (EntityNotFoundException $e) {
                     return $this->redirectToRoute('app_error', ['exception' => $e]);
                 }
@@ -83,15 +87,39 @@ class SecurityController extends AbstractController
         return $this->render('security/reset_password_request.html.twig', ['requestForm' => $form->createView()]);
     }
 
-    #[Route('/forget-password/{token}', name: 'reset_password')]
-    public function resetPass(
-        string $token,
-        Request $request,
-        UserRepository $usersRepository,
-        EntityManagerInterface $entityManager,
-        UserPasswordHasherInterface $passwordHasher
-    ): Response {
-
-        return $this->redirectToRoute('app_login');
+    #[Route('/oubli-pass/{token}',name:'reset_password')]
+    public function resetPass(string $token, Request $request, UserRepository $userRepository,ValidatorInterface $validator,
+    EntityManagerInterface $entityManager,UserPasswordHasherInterface $userPasswordHasher,MessageBusInterface $messageBus): Response
+    {
+        // control jeton
+        $user = $userRepository->findOneByResetToken($token);
+        if(isset($user)){
+            $form = $this->createForm(ChangePasswordForm::class);
+            $form->handleRequest($request);
+            if($request->isMethod('POST')){
+                $errors = $validator->validate($request);
+                if(count($errors)>0){
+                    return $this->render('/security/reset.html.twig',['resetForm'=>$form->createView(),'errors'=>$errors]);
+                }
+                if($form->isSubmitted() && $form->isValid()){
+                    $user->setResetToken('');
+                    $user->setPassword(
+                        $userPasswordHasher->hashPassword($user,$form->get('plainPassword')->getData())
+                    );
+                    try{
+                        $entityManager->persist($user);
+                        $entityManager->flush();
+                        $webmaster ='webmaster@my-domain.org';
+                        $url = $this->generateUrl('app_main', [], UrlGeneratorInterface::ABSOLUTE_URL);
+                        $messageBus->dispatch(new SendPasswordConfirm($webmaster,$user->getEmail(),'Nouveau mot de passe','new_password',['user'=>$user,'url'=>$url]));
+                        $this->addFlash('alert-success','Votre mot de passe a été modifié !');
+                        return $this->redirectToRoute('app_login');
+                    }catch (EntityNotFoundException $e){
+                        return $this->redirectToRoute('app_error',['exception'=>$e]);
+                    }
+                }
+            }
+        }
+        return $this->render('/security/reset.html.twig',['resetForm'=>$form->createView()]);
     }
 }

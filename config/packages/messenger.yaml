@@ -16,5 +16,6 @@ framework:
             Symfony\Component\Notifier\Message\SmsMessage: async
             App\Message\SendActivationMessage: async
             App\Message\SendPasswordRequest: async
+            App\Message\SendPasswordConfirm: async
 
             # Route your messages to the transports
