@@ -2,11 +2,15 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Service\JwtService;
+use App\Service\MailService;
 use App\Service\IntraController;
 use App\Repository\UserRepository;
 use App\Form\ResetPasswordRequestForm;
 use App\Message\ForgetPasswordMessage;
+use App\Message\SendActivationMessage;
+use App\Message\SendPasswordRequest;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityNotFoundException;
 use Symfony\Component\HttpFoundation\Request;
@@ -49,9 +53,10 @@ class SecurityController extends AbstractController
         Request $request,
         ValidatorInterface $validator,
         UserRepository $user_repository,
-        IntraController $intraController,
         TokenGeneratorInterface $tokenGenerator,
-        MessageBusInterface $messageBus
+        EntityManagerInterface $em,
+        MessageBusInterface $messageBus,
+        IntraController $intraController,
     ): Response {
         $form = $this->createForm(ResetPasswordRequestForm::class);
         $form->handleRequest($request);
@@ -62,17 +67,13 @@ class SecurityController extends AbstractController
             }
             if ($form->isSubmitted() && $form->isValid()) {
                 try {
-                    $usr = $user_repository->findByEmail($form->get('email')->getData());
-                    $user =$usr[0];
+                    $user = $user_repository->findByEmail($form->get('email')->getData());
+                    $usr = (object) $user[0];
                     $token= $tokenGenerator->generateToken();
+                    $usr->setResetToken($token);
+                    $em->flush();
                     $url = $this->generateUrl('reset_password', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
-                    $messageBus->dispatch(new ForgetPasswordMessage(
-                        $intraController->getWebmaster(),
-                        $user,
-                        'Demande de nouveau mot de passe',
-                        'password_reset',
-                        ['user' => $user, 'url' => $url]
-                    ));
+                    $messageBus->dispatch(new SendPasswordRequest($intraController->getWebmaster(),$usr->getEmail(),'Demande mot de passe','password_reset',['url'=>$url,'user'=>$usr]));
                     $this->addFlash('alert-success', 'Lien email nouveau mot de passe envoyé !');
                 } catch (EntityNotFoundException $e) {
                     return $this->redirectToRoute('app_error', ['exception' => $e]);
